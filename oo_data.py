@@ -10,12 +10,6 @@ class data_op:
     def __init__(self,year):
         
         self.year = year
-        self.read_scope = pd.read_csv(file,parse_dates=True,index_col="Timestamp")
-
-        self.read_scope = pd.DataFrame(self.read_scope).drop_duplicates()
-
-
-
         self.readmaster = pd.read_csv(file, parse_dates=True, index_col="Timestamp")
         self.readmaster = pd.DataFrame(self.readmaster).drop_duplicates()
         self.readmaster=self.readmaster.loc[year]
