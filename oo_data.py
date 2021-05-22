@@ -10,6 +10,9 @@ class data_op:
     def __init__(self,year):
         
         self.year = year
+        self.working_year=int(self.year[0:4]) #extract year from self.year incase self year is a value with month/day included
+                                         #eg. instead of "2020" , it "2020-4" --> so working_year only extract year for self.year variable
+                                         #this is important when using self.age_function on the year different from 2021, the code will break, age calculation will be wrong
         self.readmaster = pd.read_csv(file, parse_dates=True, index_col="Timestamp")
         self.readmaster = pd.DataFrame(self.readmaster).drop_duplicates()
         self.readmaster=self.readmaster.loc[year]
@@ -101,15 +104,24 @@ class data_op:
             try:
                 birth = z[0]+z[1]+"-"+z[2]+z[3]+"-"+z[4]+z[5]
                 birth = datetime.datetime.strptime(birth, "%y-%m-%d")
-                if 2022<=birth.year<=2068:
-                    lis_age.append(2021-birth.year+100)
+                if self.working_year+1<=birth.year<=2068:
+                    lis_age.append(self.working_year-birth.year+100)
                 else:
-                    lis_age.append(2021-birth.year)     
+                    lis_age.append(self.working_year-birth.year)     
         
             except ValueError:
                 lis_age.append("non-malaysian ic")     
         age  = pd.DataFrame(lis_age,columns=["Age"], index=a.index)
         return age
+    
+    def generate_monthly_file(self,file):
+    
+        out_ = open(file)                     #i open back file into csv format because i dont know how to reindex the timestamp column.
+        out_=pd.read_csv(out_)                #if i just reindex from the start i cannot read the data for a specific months/year
+        out_=out_.drop(columns=["Timestamp"]) #so i decided to just maintain the statement of parsing the timestamp into datetime function
+        out_=out_.set_index([pd.Index([i for i in range(1,len(out_)+1)]),"Date"])
+        out_["Patient's Name"]=out_["Patient's Name"].str.title()
+        out_.to_csv(file, encoding = "utf-8", index = True)
 
     #generalize code below.. used in peads cencus
     #orchi = pd.concat([orchi,age], axis=1).reindex(orchi.index)
