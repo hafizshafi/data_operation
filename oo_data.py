@@ -110,6 +110,15 @@ class data_op:
                 lis_age.append("non-malaysian ic")     
         age  = pd.DataFrame(lis_age,columns=["Age"], index=a.index)
         return age
+    
+    def generate_monthly_file(self,file):
+    
+        out_ = open(file)                     #i open back file into csv format because i dont know how to reindex the timestamp column.
+        out_=pd.read_csv(out_)                #if i just reindex from the start i cannot read the data for a specific months/year
+        out_=out_.drop(columns=["Timestamp"]) #so i decided to just maintain the statement of parsing the timestamp into datetime function
+        out_=out_.set_index([pd.Index([i for i in range(1,len(out_)+1)]),"Date"])
+        out_["Patient's Name"]=out_["Patient's Name"].str.title()
+        out_.to_csv(file, encoding = "utf-8", index = True)
 
     #generalize code below.. used in peads cencus
     #orchi = pd.concat([orchi,age], axis=1).reindex(orchi.index)
