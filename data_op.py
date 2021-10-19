@@ -19,9 +19,33 @@ class data_op:
         self.readmaster["Procedure"]=self.readmaster["Procedure"].str.lower()
         self.readmaster["Surgeon"]=self.readmaster["Surgeon"].str.lower()
         self.readmaster["Patient's Name"] = self.readmaster["Patient's Name"].str.lower()
-    
+        
+  
 
 
+#since there was new form being made, i am working to coantenate data from both old form and new form
+#radical changes have been made because the new data, both endoscopy and operation is in 1 form. 
+#extraction code to be deployed.
+        
+    def logbook_ot_surgeon(self, surgeon):
+        logbook = self.readmaster [self.readmaster["Surgeon"].str.contains(surgeon, re.IGNORECASE, na=True, regex=True )]
+        show(logbook)
+        return logbook
+
+    def logbook_ot_assistant(self, assistant):
+        logbook = self.readmaster [self.readmaster["Assistant"].str.contains(assistant, re.IGNORECASE, na=True, regex=True )]
+        show(logbook)
+        return logbook
+   
+
+    def logbook_scope_surgeon(self, surgeon):
+        pass
+
+
+    def logbook_scope_assist(self, assist):
+        pass
+        
+   
 
     def operation_KPI_dx (self,diagnosis):
         """filter according to diagnosis"""
