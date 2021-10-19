@@ -1,6 +1,7 @@
 import pandas as pd
 import datetime
 import csv
+import re
 
 
 file="Department of Surgery OT Log (Responses) - MasterDataLog.csv"
@@ -10,6 +11,7 @@ class data_op:
     def __init__(self,year):
         
         self.year = year
+        self.year_age=int(self.year[0:4])
         self.readmaster = pd.read_csv(file, parse_dates=True, index_col="Timestamp")
         self.readmaster = pd.DataFrame(self.readmaster).drop_duplicates()
         self.readmaster=self.readmaster.loc[year]
@@ -25,7 +27,7 @@ class data_op:
 
     def operation_KPI_dx (self,diagnosis):
         """filter according to diagnosis"""
-        operation = self.readmaster[self.readmaster["Post Operative Diagnosis"].str.contains(diagnosis)]
+        operation = self.readmaster[self.readmaster["Post Operative Diagnosis"].str.contains(diagnosis,re.IGNORECASE, regex = True)]
 
         operation = operation[["Date", "Patient's Name", "I/C Number", "Post Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
         
@@ -36,7 +38,7 @@ class data_op:
 
     def operation_KPI_operation (self,oper):
         """filter according to type of operation"""
-        operation = self.readmaster[self.readmaster["Procedure"].str.contains(oper)]
+        operation = self.readmaster[self.readmaster["Procedure"].str.contains(oper, regex=True)]
 
         operation = operation[["Date", "Patient's Name", "I/C Number", "Post Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
 
@@ -88,7 +90,7 @@ class data_op:
 
 
     def search_name(self,name):
-        operation = self.readmaster[self.readmaster["Patient's Name"].str.contains(name)]
+        operation = self.readmaster[self.readmaster["Patient's Name"].str.contains(name, regex=True)]
         operation = operation[["Date", "Patient's Name", "I/C Number", "Pre Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
         operation["Patient's Name"] = operation["Patient's Name"].str.lower()
         return operation
@@ -101,15 +103,20 @@ class data_op:
             try:
                 birth = z[0]+z[1]+"-"+z[2]+z[3]+"-"+z[4]+z[5]
                 birth = datetime.datetime.strptime(birth, "%y-%m-%d")
-                if 2022<=birth.year<=2068:
-                    lis_age.append(2021-birth.year+100)
+                if self.year_age+1<=birth.year<=2068:
+                    lis_age.append(self.year_age-birth.year+100)
                 else:
-                    lis_age.append(2021-birth.year)     
+                    lis_age.append(self.year_age-birth.year)     
         
             except ValueError:
-                lis_age.append("non-malaysian ic")     
+                lis_age.append("non-malaysian ic")
+                
+            except IndexError:
+                lis_age.append("invalid ID")
+                
         age  = pd.DataFrame(lis_age,columns=["Age"], index=a.index)
         return age
+    
 
     #generalize code below.. used in peads cencus
     #orchi = pd.concat([orchi,age], axis=1).reindex(orchi.index)
