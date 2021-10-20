@@ -4,7 +4,7 @@ import csv
 import re
 
 
-file="Department of Surgery OT Log (Responses) - MasterDataLog.csv"
+file="Department_of_Surgery_OT_Log_(Responses).csv"
 
 class data_op:
     
@@ -13,21 +13,13 @@ class data_op:
         self.year = year
         self.year_age=int(self.year[0:4])
         self.readmaster = pd.read_csv(file, parse_dates=True, index_col="Timestamp")
-        self.readmaster = pd.DataFrame(self.readmaster).drop_duplicates()
+        self.readmaster = self.readmaster.drop_duplicates(keep = 'first)
         self.readmaster=self.readmaster.loc[year]
 
-        self.readmaster["Pre Operative Diagnosis"]=self.readmaster["Pre Operative Diagnosis"].str.lower()
-        self.readmaster["Post Operative Diagnosis"]=self.readmaster["Post Operative Diagnosis"].str.lower()
-        self.readmaster["Procedure"]=self.readmaster["Procedure"].str.lower()
-        self.readmaster["Surgeon"]=self.readmaster["Surgeon"].str.lower()
-        self.readmaster["Patient's Name"] = self.readmaster["Patient's Name"].str.lower()
-    
-
-
-
+ 
     def operation_KPI_dx (self,diagnosis):
         """filter according to diagnosis"""
-        operation = self.readmaster[self.readmaster["Post Operative Diagnosis"].str.contains(diagnosis,re.IGNORECASE, regex = True)]
+        operation = self.readmaster[self.readmaster["Post Operative Diagnosis"].str.contains(diagnosis,flags=re.IGNORECASE, regex=True)]
 
         operation = operation[["Date", "Patient's Name", "I/C Number", "Post Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
         
@@ -38,7 +30,7 @@ class data_op:
 
     def operation_KPI_operation (self,oper):
         """filter according to type of operation"""
-        operation = self.readmaster[self.readmaster["Procedure"].str.contains(oper, regex=True)]
+        operation = self.readmaster[self.readmaster["Procedure"].str.contains(oper,flags=re.IGNORECASE, regex=True)]
 
         operation = operation[["Date", "Patient's Name", "I/C Number", "Post Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
 
