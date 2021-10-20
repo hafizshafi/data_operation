@@ -108,6 +108,15 @@ class data_op:
                 
         age  = pd.DataFrame(lis_age,columns=["Age"], index=a.index)
         return age
+                                                          
+    def generate_logbook(self,logbook, name):
+
+        _path = Path.cwd()
+        os.chdir(_path)
+        pathlogbook = name+"_ot_"+self.year
+        os.mkdir(pathlogbook)
+        os.chdir(str(_path)+"/"+pathlogbook)
+        logbook.to_csv(str(Path.cwd())+"/scope_"+name+".csv")
     
 
     #generalize code below.. used in peads cencus
