@@ -2,7 +2,8 @@ import pandas as pd
 import datetime
 import csv
 from pandasgui import show
-import re
+import re, os
+from pathlib import Path
 
 file = "Department_of_Surgery_Endoscopy_Log_(Responses).csv"
 class data_op:
@@ -26,7 +27,7 @@ class data_op:
         return logbook
 
     def logbook_scope_surgeon(self, surgeon):
-        logbook = self.readmaster[self.readmaster["Operator"].str.contains(assistant,flags=re.IGNORECASE, na=True, regex=True )]
+        logbook = self.readmaster[self.readmaster["Operator"].str.contains(surgeon,flags=re.IGNORECASE, na=True, regex=True )]
         #show(logbook)
         return logbook
 
@@ -136,4 +137,15 @@ class data_op:
         out_=out_.set_index([pd.Index([i for i in range(1,len(out_)+1)]),"Date"])
         out_["Patient's Name"]=out_["Patient's Name"].str.title()
         out_.to_csv(file, encoding = "utf-8", index = True)
+
+    def generate_logbook(self,logbook, name):
+
+        _path = Path.cwd()
+        os.chdir(_path)
+        
+        pathlogbook = name+"_ot_"+self.year
+        os.mkdir(pathlogbook)
+        os.chdir(str(_path)+"/"+pathlogbook)
+        logbook.to_csv(str(Path.cwd())+"/scope_"+name+".csv")
+        
     
