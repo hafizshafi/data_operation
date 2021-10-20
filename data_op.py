@@ -117,7 +117,7 @@ class data_op:
         pathlogbook = name+"_ot_"+self.year
         os.mkdir(pathlogbook)
         os.chdir(str(_path)+"/"+pathlogbook)
-        logbook.to_csv(str(Path.cwd())+"/scope_"+name+".csv")
+        logbook.to_csv(str(Path.cwd())+"/ot_"+name+".csv")
     
 
     #generalize code below.. used in peads cencus
