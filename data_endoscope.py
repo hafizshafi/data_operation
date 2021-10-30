@@ -32,7 +32,7 @@ class data_op:
         return logbook
 
     def logbook_scope_assist(self, assist):
-        logbook = self.readmaster[self.readmaster["Assistant"].str.contains(assistant,flags=re.IGNORECASE, na=True, regex=True )]
+        logbook = self.readmaster[self.readmaster["Assistant"].str.contains(assist,flags=re.IGNORECASE, na=True, regex=True )]
         #show(logbook)
         return logbook
         
