@@ -1,11 +1,12 @@
 import pandas as pd
 import datetime
 import csv
-import re, os
+from pandasgui import show
+import re
 from pathlib import Path
+import os
 
-
-file="Department_of_Surgery_OT_Log_(Responses).csv"
+file1="Department_of_Surgery_OT_Endoscopy_Census1.csv"
 
 class data_op:
     
@@ -13,27 +14,54 @@ class data_op:
         
         self.year = year
         self.year_age=int(self.year[0:4])
-        self.readmaster = pd.read_csv(file, parse_dates=True, index_col="Timestamp")
-        self.readmaster = self.readmaster.drop_duplicates(keep = 'first)
+
+        self.readmaster = pd.read_csv(file1, parse_dates=True, index_col="Timestamp")
+        self.readmaster = pd.DataFrame(self.readmaster).drop_duplicates()
         self.readmaster=self.readmaster.loc[year]
 
- 
+        self.readmaster["Operation Status"]=self.readmaster["Operation Status"].fillna(" ")
+
+
+    def logbook_ot_surgeon(self, surgeon):
+        logbook = self.readmaster [self.readmaster["Surgeon"].str.contains(surgeon,flags=re.IGNORECASE, na=False, regex=True )]
+        logbook = logbook[~logbook["Procedure"].str.contains("ogds|colonoscopy|ercp", flags=re.IGNORECASE, na = False, regex=True)]
+        #show(logbook)
+        return logbook
+
+    def logbook_ot_assistant(self, assistant):
+        logbook = self.readmaster [self.readmaster["Assistant"].str.contains(assistant,flags=re.IGNORECASE, na=True, regex=True )]
+        logbook = logbook[~logbook["Procedure"].str.contains("ogds|colonoscopy|ercp", flags=re.IGNORECASE, na = False, regex=True)]
+        #show(logbook)
+        return logbook
+
+    def logbook_scope_surgeon(self, surgeon):
+        logbook = self.readmaster[self.readmaster["Surgeon"].str.contains(surgeon,flags=re.IGNORECASE, na=True, regex=True )]
+        logbook = logbook[logbook["Procedure"].str.contains("ogds|colonoscopy|ercp", flags=re.IGNORECASE, na = False, regex=True)]
+        #show(logbook)
+        return logbook
+
+    def logbook_scope_assist(self, assist):
+        logbook = self.readmaster[self.readmaster["Assistant"].str.contains(assist,flags=re.IGNORECASE, na=True, regex=True )]
+        logbook = logbook[logbook["Procedure"].str.contains("ogds|colonoscopy|ercp", flags=re.IGNORECASE, na = False, regex=True)]
+        #show(logbook)
+        return logbook
+
     def operation_KPI_dx (self,diagnosis):
         """filter according to diagnosis"""
-        operation = self.readmaster[self.readmaster["Post Operative Diagnosis"].str.contains(diagnosis,flags=re.IGNORECASE, regex=True)]
+        operation = self.readmaster[self.readmaster["Post Operative Diagnosis"].str.contains(diagnosis,flags=re.IGNORECASE, regex=True )]
 
-        operation = operation[["Date", "Patient's Name", "I/C Number", "Post Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
+        operation = operation[["Date", "Patient Name", "IC / Passport", "Post Operative Diagnosis", "Operation Status"]].drop_duplicates(subset=["Patient Name"])
         
-        operation["Patient's Name"] = operation["Patient's Name"].str.title()
+        operation["Patient Name"] = operation["Patient Name"].str.title()
 
         return operation
 
 
     def operation_KPI_operation (self,oper):
-        """filter according to type of operation"""
-        operation = self.readmaster[self.readmaster["Procedure"].str.contains(oper,flags=re.IGNORECASE, regex=True)]
+        """filter according to Operation Status"""
+        operation = self.readmaster[self.readmaster["Procedure"].str.contains(oper,flags=re.IGNORECASE,regex = True)]
 
-        operation = operation[["Date", "Patient's Name", "I/C Number", "Post Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
+        operation = operation[["Date", "Patient Name", "IC / Passport","Post Operative Diagnosis","Procedure", "Operation Status"]].drop_duplicates(subset=["Patient Name"])
 
         return operation
 
@@ -45,8 +73,8 @@ class data_op:
         monthname = ["Jan","Feb","March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "Total"]
         for month in range(1,13):
             try:
-                print(month, "\t", len(a.loc[self.year+"-"+str(month)])) #i used this because when the value in a month is zero it become key error
-                monthlist.append(len(a.loc[self.year+"-"+str(month)]))
+                print(month, "\t", len(a.loc[year+"-"+str(month)])) #i used this because when the value in a month is zero it become key error
+                monthlist.append(len(a.loc[year+"-"+str(month)]))
                 
             except KeyError:
                 monthlist.append(0) # so this statementt is for counter the error
@@ -83,15 +111,15 @@ class data_op:
 
 
     def search_name(self,name):
-        operation = self.readmaster[self.readmaster["Patient's Name"].str.contains(name, regex=True)]
-        operation = operation[["Date", "Patient's Name", "I/C Number", "Pre Operative Diagnosis","Procedure", "Type of Operation"]].drop_duplicates(subset=["Patient's Name"])
-        operation["Patient's Name"] = operation["Patient's Name"].str.lower()
+        operation = self.readmaster[self.readmaster["Patient Name"].str.contains(name)]
+        operation = operation[["Date", "Patient Name", "IC / Passport","Procedure", "Operation Status"]].drop_duplicates(subset=["Patient Name"])
+        operation["Patient Name"] = operation["Patient Name"].str.lower()
         return operation
 
     def age_(self,a):            #TODO : create a function to concatenate age 
         lis_age=[]
         z=""
-        for ic in a["I/C Number"]:
+        for ic in a["IC / Passport"]:
             z = list(ic)
             try:
                 birth = z[0]+z[1]+"-"+z[2]+z[3]+"-"+z[4]+z[5]
@@ -109,14 +137,23 @@ class data_op:
                 
         age  = pd.DataFrame(lis_age,columns=["Age"], index=a.index)
         return age
-                                                          
+    
+    def generate_monthly_file(self,file):
+    
+        out_ = open(file)                     #i open back file into csv format because i dont know how to reindex the timestamp column.
+        out_=pd.read_csv(out_)                #if i just reindex from the start i cannot read the data for a specific months/year
+        out_=out_.drop(columns=["Timestamp"]) #so i decided to just maintain the statement of parsing the timestamp into datetime function
+        out_=out_.set_index([pd.Index([i for i in range(1,len(out_)+1)]),"Date"])
+        out_["Patient Name"]=out_["Patient Name"].str.title()
+        out_.to_csv(file, encoding = "utf-8", index = True)
+        
     def generate_logbook(self,logbook, name):
 
         _path = Path.cwd()
         os.chdir(_path)
-        pathlogbook = name+"_ot_"+self.year
+        pathlogbook = name+"_"+self.year
         os.mkdir(pathlogbook)
-        logbook.to_csv(str(_path)+"/"+pathlogbook+".csv")
+        logbook.to_csv(str(_path)+"/"+pathlogbook+"/"+pathlogbook+".csv")
     
 
     #generalize code below.. used in peads cencus
